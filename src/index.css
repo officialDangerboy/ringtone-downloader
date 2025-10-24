@@ -64,3 +64,20 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+  }
+  
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-8px);
+  }
+}

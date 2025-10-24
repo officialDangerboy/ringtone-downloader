@@ -76,8 +76,12 @@ const Index = () => {
       <Hero onSearch={handleSearch} />
       
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
+            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
+          </div>
+          <p className="mt-6 text-lg text-muted-foreground font-medium">Searching for music...</p>
         </div>
       ) : (
         <SearchResults
