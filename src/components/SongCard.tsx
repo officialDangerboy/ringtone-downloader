@@ -84,7 +84,7 @@ const SongCard = ({ track, isPlaying, onPlay }: SongCardProps) => {
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground rounded-lg transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-lg hover:shadow-primary/20 transform hover:scale-[1.02]"
         >
           <Download className="w-4 h-4" />
-          <span>Download Preview</span>
+          <span>Download</span>
         </button>
       </div>
     </Card>

@@ -1,5 +1,7 @@
 import { useState } from "react";
-import Hero from "@/components/Hero";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import CategorySection from "@/components/CategorySection";
 import SearchResults from "@/components/SearchResults";
 import AudioPlayer from "@/components/AudioPlayer";
 import { toast } from "sonner";
@@ -72,25 +74,33 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Hero onSearch={handleSearch} />
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Header onSearch={handleSearch} />
       
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-32">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
-            <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
+      <main className="flex-1">
+        {!isLoading && tracks.length === 0 && (
+          <CategorySection onCategorySearch={handleSearch} />
+        )}
+        
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-32">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
+              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
+            </div>
+            <p className="mt-6 text-lg text-muted-foreground font-medium">Searching for ringtones...</p>
           </div>
-          <p className="mt-6 text-lg text-muted-foreground font-medium">Searching for music...</p>
-        </div>
-      ) : (
-        <SearchResults
-          tracks={tracks}
-          currentTrackId={currentTrack?.trackId || null}
-          isPlaying={isPlaying}
-          onTrackPlay={handleTrackPlay}
-        />
-      )}
+        ) : (
+          <SearchResults
+            tracks={tracks}
+            currentTrackId={currentTrack?.trackId || null}
+            isPlaying={isPlaying}
+            onTrackPlay={handleTrackPlay}
+          />
+        )}
+      </main>
+
+      <Footer />
 
       <AudioPlayer
         currentTrack={currentTrack}
