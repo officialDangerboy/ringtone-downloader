@@ -1,6 +1,7 @@
-import { Download, Play, Pause, Music } from "lucide-react";
+import { Download, Play, Pause, Music, Heart, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface SongCardProps {
   track: {
@@ -17,9 +18,33 @@ interface SongCardProps {
 
 const SongCard = ({ track, isPlaying, onPlay }: SongCardProps) => {
   const [imageError, setImageError] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const handleDownload = () => {
     window.open(track.previewUrl, "_blank");
+    toast.success("Opening ringtone preview for download");
+  };
+
+  const handleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: track.trackName,
+          text: `Check out this ringtone: ${track.trackName} by ${track.artistName}`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+    }
   };
 
   return (
@@ -41,6 +66,24 @@ const SongCard = ({ track, isPlaying, onPlay }: SongCardProps) => {
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
+        {/* Quick actions */}
+        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <button
+            onClick={handleFavorite}
+            className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <Heart
+              className={`w-4 h-4 ${isFavorite ? "fill-destructive text-destructive" : "text-white"}`}
+            />
+          </button>
+          <button
+            onClick={handleShare}
+            className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <Share2 className="w-4 h-4 text-white" />
+          </button>
+        </div>
+        
         {/* Play button with glow effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
           <button
@@ -58,30 +101,32 @@ const SongCard = ({ track, isPlaying, onPlay }: SongCardProps) => {
 
         {/* Playing indicator */}
         {isPlaying && (
-          <div className="absolute top-3 right-3 flex gap-1">
+          <div className="absolute top-3 left-3 flex gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
             <div className="w-1 h-4 bg-primary animate-[pulse_0.6s_ease-in-out_infinite]" />
             <div className="w-1 h-4 bg-primary animate-[pulse_0.6s_ease-in-out_infinite_0.2s]" />
             <div className="w-1 h-4 bg-primary animate-[pulse_0.6s_ease-in-out_infinite_0.4s]" />
           </div>
         )}
+
+        {/* Duration badge */}
+        <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1 text-xs text-white font-medium">
+          0:30
+        </div>
       </div>
 
-      <div className="p-5 space-y-3">
-        <div className="space-y-1.5">
-          <h3 className="font-bold text-foreground truncate text-base leading-tight group-hover:text-primary transition-colors duration-200">
+      <div className="p-4 space-y-3">
+        <div className="space-y-1">
+          <h3 className="font-bold text-foreground truncate text-sm leading-tight group-hover:text-primary transition-colors duration-200">
             {track.trackName}
           </h3>
-          <p className="text-sm text-muted-foreground truncate font-medium">
+          <p className="text-xs text-muted-foreground truncate font-medium">
             {track.artistName}
-          </p>
-          <p className="text-xs text-muted-foreground/70 truncate">
-            {track.collectionName}
           </p>
         </div>
 
         <button
           onClick={handleDownload}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground rounded-lg transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-lg hover:shadow-primary/20 transform hover:scale-[1.02]"
+          className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-secondary hover:bg-primary hover:text-primary-foreground text-secondary-foreground rounded-lg transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-lg hover:shadow-primary/20 transform hover:scale-[1.02]"
         >
           <Download className="w-4 h-4" />
           <span>Download</span>
