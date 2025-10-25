@@ -88,14 +88,14 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
     <>
       <audio ref={audioRef} />
       <Card className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-border/50 backdrop-blur-xl">
-        <div className="max-w-screen-2xl mx-auto px-4 py-3 md:py-4">
-          {/* Progress Bar */}
-          <div className="mb-3 md:mb-4">
-            <div className="flex items-center gap-3">
+        <div className="max-w-screen-2xl mx-auto px-3 md:px-4 py-2 md:py-4">
+          {/* Progress Bar - Hidden on mobile, shown on tablet+ */}
+          <div className="hidden sm:flex mb-3 md:mb-4">
+            <div className="flex items-center gap-2 md:gap-3 w-full">
               <span className="text-xs text-muted-foreground font-medium min-w-[35px]">
                 {formatTime(currentTime)}
               </span>
-              <div className="flex-1 group cursor-pointer">
+              <div className="flex-1 group cursor-pointer py-2">
                 <Slider
                   value={[currentTime]}
                   max={duration || 100}
@@ -107,6 +107,21 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
               <span className="text-xs text-muted-foreground font-medium min-w-[35px]">
                 {formatTime(duration)}
               </span>
+            </div>
+          </div>
+          
+          {/* Mobile Progress Bar - Compact version */}
+          <div className="sm:hidden mb-2">
+            <div className="relative h-1 bg-muted rounded-full overflow-hidden cursor-pointer" 
+                 onClick={(e) => {
+                   const rect = e.currentTarget.getBoundingClientRect();
+                   const percent = (e.clientX - rect.left) / rect.width;
+                   handleProgressChange([percent * duration]);
+                 }}>
+              <div 
+                className="absolute left-0 top-0 h-full bg-primary rounded-full transition-all"
+                style={{ width: `${(currentTime / duration) * 100}%` }}
+              />
             </div>
           </div>
 
