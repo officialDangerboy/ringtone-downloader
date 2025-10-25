@@ -25,80 +25,51 @@ const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState("");
+  const [showHome, setShowHome] = useState(true);
+
+  const resetToHome = () => {
+    setShowHome(true);
+    setTracks([]);
+    setSelectedGenre("");
+    setCurrentTrack(null);
+    setIsPlaying(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
-    
+
+    setShowHome(false);
     setIsLoading(true);
     const searchQuery = selectedGenre ? `${query} ${selectedGenre}` : query;
-    
+
     try {
       const response = await fetch(
         `https://itunes.apple.com/search?term=${encodeURIComponent(searchQuery)}&entity=song&limit=30`
       );
       const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
+
+      if (data.results?.length > 0) {
         setTracks(data.results);
         toast.success(`Found ${data.results.length} ringtones`);
-        // Scroll to results
-        setTimeout(() => {
-          document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
       } else {
         setTracks([]);
-        toast.info("No ringtones found. Try a different search term.");
+        toast.info("No ringtones found.");
       }
-    } catch (error) {
-      console.error("Search error:", error);
-      toast.error("Failed to search ringtones. Please try again.");
+    } catch {
+      toast.error("Search error!");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGenreSelect = (genre: string) => {
-    setSelectedGenre(genre);
-    if (genre && tracks.length === 0) {
-      handleSearch(genre);
-    }
-  };
-
-  const handleTrackPlay = (track: Track) => {
-    if (currentTrack?.trackId === track.trackId) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-    }
-  };
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleNext = () => {
-    if (!currentTrack || tracks.length === 0) return;
-    const currentIndex = tracks.findIndex(t => t.trackId === currentTrack.trackId);
-    const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentTrack(tracks[nextIndex]);
-    setIsPlaying(true);
-  };
-
-  const handlePrevious = () => {
-    if (!currentTrack || tracks.length === 0) return;
-    const currentIndex = tracks.findIndex(t => t.trackId === currentTrack.trackId);
-    const previousIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
-    setCurrentTrack(tracks[previousIndex]);
-    setIsPlaying(true);
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header onSearch={handleSearch} />
-      
+      {/* ✅ Logo Reset */}
+      <Header onSearch={handleSearch} onLogoClick={resetToHome} />
+
       <main className="flex-1">
-        {tracks.length === 0 && !isLoading && (
+        {showHome && (
           <>
             <TrendingSection onSearch={handleSearch} />
             <CategorySection onCategorySearch={handleSearch} />
@@ -106,26 +77,26 @@ const Index = () => {
             <HowItWorks />
           </>
         )}
-        
-        {tracks.length > 0 && (
-          <GenreFilter onGenreSelect={handleGenreSelect} selectedGenre={selectedGenre} />
+
+        {!showHome && selectedGenre && (
+          <GenreFilter onGenreSelect={setSelectedGenre} selectedGenre={selectedGenre} />
         )}
-        
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <div className="relative">
+
+        {!showHome && (
+          isLoading ?
+            <div className="flex justify-center py-32">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
-              <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
             </div>
-            <p className="mt-6 text-lg text-muted-foreground font-medium">Searching for ringtones...</p>
-          </div>
-        ) : (
-          <SearchResults
-            tracks={tracks}
-            currentTrackId={currentTrack?.trackId || null}
-            isPlaying={isPlaying}
-            onTrackPlay={handleTrackPlay}
-          />
+            :
+            <SearchResults
+              tracks={tracks}
+              currentTrackId={currentTrack?.trackId || null}
+              isPlaying={isPlaying}
+              onTrackPlay={(track) => {
+                setCurrentTrack(track);
+                setIsPlaying(true);
+              }}
+            />
         )}
       </main>
 
@@ -134,9 +105,9 @@ const Index = () => {
       <AudioPlayer
         currentTrack={currentTrack}
         isPlaying={isPlaying}
-        onPlayPause={handlePlayPause}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
+        onPlayPause={() => setIsPlaying(!isPlaying)}
+        onNext={() => console.log("next")}
+        onPrevious={() => console.log("previous")}
       />
     </div>
   );
