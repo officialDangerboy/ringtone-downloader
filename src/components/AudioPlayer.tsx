@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -19,6 +19,9 @@ interface AudioPlayerProps {
 
 const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(70);
 
   useEffect(() => {
     if (!audioRef.current || !currentTrack) return;
@@ -39,6 +42,46 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
     }
   }, [currentTrack]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handleEnded = () => onNext();
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [onNext]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  const handleProgressChange = (value: number[]) => {
+    const newTime = value[0];
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   if (!currentTrack) return null;
 
   return (
@@ -46,6 +89,27 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
       <audio ref={audioRef} />
       <Card className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-border/50 backdrop-blur-xl">
         <div className="max-w-screen-2xl mx-auto px-4 py-3 md:py-4">
+          {/* Progress Bar */}
+          <div className="mb-3 md:mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-medium min-w-[35px]">
+                {formatTime(currentTime)}
+              </span>
+              <div className="flex-1 group cursor-pointer">
+                <Slider
+                  value={[currentTime]}
+                  max={duration || 100}
+                  step={0.1}
+                  onValueChange={handleProgressChange}
+                  className="w-full"
+                />
+              </div>
+              <span className="text-xs text-muted-foreground font-medium min-w-[35px]">
+                {formatTime(duration)}
+              </span>
+            </div>
+          </div>
+
           <div className="flex items-center gap-3 md:gap-6">
             {/* Track Info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -95,7 +159,13 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
             {/* Volume - Desktop only */}
             <div className="hidden lg:flex items-center gap-2 w-32">
               <Volume2 className="w-4 h-4 text-muted-foreground" />
-              <Slider defaultValue={[70]} max={100} step={1} className="flex-1" />
+              <Slider 
+                value={[volume]} 
+                max={100} 
+                step={1} 
+                onValueChange={(value) => setVolume(value[0])}
+                className="flex-1" 
+              />
             </div>
           </div>
         </div>
