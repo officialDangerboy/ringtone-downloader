@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Play, Pause, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 
 interface AudioPlayerProps {
@@ -12,14 +13,22 @@ interface AudioPlayerProps {
   } | null;
   isPlaying: boolean;
   onPlayPause: () => void;
-  onNext?: () => void;
-  onPrevious?: () => void;
+  onNext: () => void;
+  onPrevious: () => void;
 }
 
 const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+
+  useEffect(() => {
+    if (!audioRef.current || !currentTrack) return;
+
+    if (isPlaying) {
+      audioRef.current.play();
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying, currentTrack]);
 
   useEffect(() => {
     if (audioRef.current && currentTrack) {
@@ -30,125 +39,68 @@ const AudioPlayer = ({ currentTrack, isPlaying, onPlayPause, onNext, onPrevious 
     }
   }, [currentTrack]);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play();
-      } else {
-        audioRef.current.pause();
-      }
-    }
-  }, [isPlaying]);
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-    }
-  };
-
-  const handleSliderChange = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
   if (!currentTrack) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50 animate-slide-up">
-      <audio
-        ref={audioRef}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => onNext?.()}
-      />
-      
-      <div className="max-w-screen-2xl mx-auto px-4 py-4">
-        <div className="flex items-center gap-4">
-          {/* Track Info */}
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <img
-              src={currentTrack.artworkUrl100}
-              alt={currentTrack.trackName}
-              className="w-14 h-14 rounded-lg shadow-lg"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-foreground truncate">
-                {currentTrack.trackName}
-              </p>
-              <p className="text-sm text-muted-foreground truncate">
-                {currentTrack.artistName}
-              </p>
+    <>
+      <audio ref={audioRef} />
+      <Card className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-border/50 backdrop-blur-xl">
+        <div className="max-w-screen-2xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center gap-3 md:gap-6">
+            {/* Track Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <img
+                src={currentTrack.artworkUrl100}
+                alt={currentTrack.trackName}
+                className="w-12 h-12 md:w-16 md:h-16 rounded-lg shadow-lg"
+              />
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-foreground truncate text-sm md:text-base">
+                  {currentTrack.trackName}
+                </h4>
+                <p className="text-xs md:text-sm text-muted-foreground truncate">
+                  {currentTrack.artistName}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Player Controls */}
-          <div className="flex-1 max-w-2xl">
-            <div className="flex items-center justify-center gap-4 mb-2">
+            {/* Controls */}
+            <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={onPrevious}
-                className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                disabled={!onPrevious}
+                className="hidden sm:flex w-8 h-8 md:w-10 md:h-10 items-center justify-center rounded-full hover:bg-muted transition-colors"
               >
-                <SkipBack className="w-5 h-5" fill="currentColor" />
+                <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
               </button>
               
               <button
                 onClick={onPlayPause}
-                className="w-10 h-10 bg-primary hover:bg-primary/90 rounded-full flex items-center justify-center transition-all hover:scale-105"
+                className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-lg hover:shadow-primary/50"
               >
                 {isPlaying ? (
-                  <Pause className="w-5 h-5 text-primary-foreground" fill="currentColor" />
+                  <Pause className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" fill="currentColor" />
                 ) : (
-                  <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="currentColor" />
+                  <Play className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground ml-0.5" fill="currentColor" />
                 )}
               </button>
 
               <button
                 onClick={onNext}
-                className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                disabled={!onNext}
+                className="hidden sm:flex w-8 h-8 md:w-10 md:h-10 items-center justify-center rounded-full hover:bg-muted transition-colors"
               >
-                <SkipForward className="w-5 h-5" fill="currentColor" />
+                <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
 
-            {/* Progress Bar */}
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-10 text-right">
-                {formatTime(currentTime)}
-              </span>
-              <Slider
-                value={[currentTime]}
-                max={duration || 100}
-                step={0.1}
-                onValueChange={handleSliderChange}
-                className="flex-1"
-              />
-              <span className="text-xs text-muted-foreground w-10">
-                {formatTime(duration)}
-              </span>
+            {/* Volume - Desktop only */}
+            <div className="hidden lg:flex items-center gap-2 w-32">
+              <Volume2 className="w-4 h-4 text-muted-foreground" />
+              <Slider defaultValue={[70]} max={100} step={1} className="flex-1" />
             </div>
           </div>
-
-          {/* Spacer for layout balance */}
-          <div className="flex-1 hidden lg:block" />
         </div>
-      </div>
-    </div>
+      </Card>
+    </>
   );
 };
 
